@@ -50,6 +50,7 @@ client = NodexClient(
 - **Workflows** (recipes for common flows):
   - `workflows/upload-product-pdp.md`
   - `workflows/edit-pdps-by-category.md`
+  - `workflows/upload-tagged-images.md`
   - `workflows/use-block-group-as-template.md`
   - `workflows/draft-and-approve-flow.md`
   - `workflows/bulk-migration.md`
