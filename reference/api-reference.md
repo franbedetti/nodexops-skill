@@ -36,6 +36,21 @@ Update Store
 
 ---
 
+## GET /api/v2/stores/{store_id}/categories
+
+List Categories
+
+**Parameters:**
+
+| Name | In | Required | Type |
+|---|---|---|---|
+| `store_id` | path | yes | integer |
+| `authorization` | header | yes | string |
+
+**Response 200:** Successful Response
+
+---
+
 ## GET /api/v2/stores/{store_id}/nodexgen/block-groups
 
 List Block Groups
@@ -333,6 +348,113 @@ Delete Tag
 | `store_id` | path | yes | integer |
 | `tag_id` | path | yes | integer |
 | `merge_into` | query | no | any |
+| `authorization` | header | yes | string |
+
+**Response 200:** Successful Response
+
+---
+
+## GET /api/v2/stores/{store_id}/products
+
+List Products
+
+**Parameters:**
+
+| Name | In | Required | Type |
+|---|---|---|---|
+| `store_id` | path | yes | integer |
+| `q` | query | no | any |
+| `category_id` | query | no | any |
+| `published` | query | no | any |
+| `created_at_min` | query | no | any |
+| `created_at_max` | query | no | any |
+| `updated_at_min` | query | no | any |
+| `updated_at_max` | query | no | any |
+| `page` | query | no | integer |
+| `per_page` | query | no | integer |
+| `fields` | query | no | any |
+| `authorization` | header | yes | string |
+
+**Response 200:** Successful Response
+
+---
+
+## POST /api/v2/stores/{store_id}/products
+
+Create Product
+
+**Parameters:**
+
+| Name | In | Required | Type |
+|---|---|---|---|
+| `store_id` | path | yes | integer |
+| `authorization` | header | yes | string |
+
+**Request body:** see schema below.
+
+**Response 200:** Successful Response
+
+---
+
+## GET /api/v2/stores/{store_id}/products/{product_id}
+
+Get Product
+
+**Parameters:**
+
+| Name | In | Required | Type |
+|---|---|---|---|
+| `store_id` | path | yes | integer |
+| `product_id` | path | yes | integer |
+| `authorization` | header | yes | string |
+
+**Response 200:** Successful Response
+
+---
+
+## PUT /api/v2/stores/{store_id}/products/{product_id}
+
+Update Product
+
+**Parameters:**
+
+| Name | In | Required | Type |
+|---|---|---|---|
+| `store_id` | path | yes | integer |
+| `product_id` | path | yes | integer |
+| `authorization` | header | yes | string |
+
+**Request body:** see schema below.
+
+**Response 200:** Successful Response
+
+---
+
+## DELETE /api/v2/stores/{store_id}/products/{product_id}
+
+Delete Product
+
+**Parameters:**
+
+| Name | In | Required | Type |
+|---|---|---|---|
+| `store_id` | path | yes | integer |
+| `product_id` | path | yes | integer |
+| `authorization` | header | yes | string |
+
+**Response 200:** Successful Response
+
+---
+
+## GET /api/v2/stores/{store_id}/store-info
+
+Get Store Info
+
+**Parameters:**
+
+| Name | In | Required | Type |
+|---|---|---|---|
+| `store_id` | path | yes | integer |
 | `authorization` | header | yes | string |
 
 **Response 200:** Successful Response
