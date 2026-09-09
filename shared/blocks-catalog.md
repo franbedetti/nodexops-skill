@@ -69,11 +69,11 @@ The `texto` field varies by block_type — for the JSON-shaped types listed belo
 **Label in UI:** Estructura
 **Icon:** ▥
 
-**`texto` shape:** string
+**`texto` shape:** (unused — the layout lives in `rows`; see the section below)
 
 ## Column-child subtypes
 
-The following `block_type` values are valid only as children inside a `columns` block.
+The following `block_type` values are valid only as children of a container block.
 
 ## text-only (also valid as a column-child subtype)
 
@@ -86,3 +86,38 @@ The following `block_type` values are valid only as children inside a `columns` 
 ## highlight (also valid as a column-child subtype)
 
 **`texto` shape:** string (markdown supported)
+
+## structure — rows, slots and `slot_ref`
+
+`structure` is the layout block that replaced the retired `columns` and `group`
+types. It does **not** use `texto`. Two things define it:
+
+- **`rows`** — a list of rows, each with its columns and the slot each column
+  exposes. Accepted as a native list or as a JSON-encoded string; it always
+  comes back as a native list.
+- **`slot_ref`** — children are **not** nested. They are ordinary top-level
+  blocks that point at a slot by its id. This is what lets a child be any block
+  type without a special child schema.
+
+Other fields: `uid` (stable block id, used by `slot_ref`), `mobile_behavior`
+(how the columns collapse on a phone) and `row_gap`.
+
+```json
+[
+  {
+    "block_type": "structure",
+    "uid": "s1",
+    "rows": [{"cols": [{"slot": "left"}, {"slot": "right"}]}],
+    "mobile_behavior": "stack",
+    "row_gap": "16px"
+  },
+  {"block_type": "text-only", "slot_ref": "left", "titulo": "Left", "texto": "..."},
+  {"block_type": "media-only", "slot_ref": "right", "media": "https://..."}
+]
+```
+
+`columns` and `group` are **retired**. They still work through the public API,
+but the panel migrates them to `structure` the first time someone opens the
+product — after that your integration and the panel no longer agree on the
+shape. New integrations should emit `structure`.
+
