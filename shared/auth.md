@@ -36,8 +36,10 @@ Each API key is bound to **exactly one store**. URL paths embed the `store_id`. 
 | 401 | Bearer header missing/invalid, or key revoked/expired |
 | 403 | Key lacks required scope OR key is for a different store |
 | 404 | Resource (product, group, page) not found in this store |
-| 429 | Rate limit (default 120 req/min, configurable per key) |
-| 500 | Internal error or Tiendanube API failure (retry with backoff) |
+| 422 | Tiendanube rejected the data (catalog endpoints): `detail` = `{tiendanube_status, message}` with Tiendanube's own reason |
+| 429 | Rate limit (default 120 req/min, configurable per key), or Tiendanube's own limit on catalog endpoints. Always with `Retry-After` |
+| 500 | Internal error (retry with backoff) |
+| 502 | Tiendanube failed or did not respond (retry with backoff) |
 
 Error messages are intentionally generic. Detailed reasons go to the server-side audit log only.
 
@@ -45,7 +47,7 @@ Error messages are intentionally generic. Detailed reasons go to the server-side
 
 - **Default**: 120 requests/minute per API key (sliding window)
 - Configurable per-key (admin can raise)
-- 429 response includes a `Retry-After` header (seconds)
+- 429 response includes a `Retry-After` header (seconds), plus `X-RateLimit-Limit` and `X-RateLimit-Remaining`
 
 ## Audit
 
