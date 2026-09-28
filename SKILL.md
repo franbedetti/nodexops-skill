@@ -13,11 +13,12 @@ Use this skill when an external project (e.g., a migration tool or a content aut
 - Generating PDPs from product data using AI and publishing them as drafts for client review
 - Reusing a pre-approved "template" (block-group) across many products of a category
 - Automating blog post or content page publication
+- Creating, editing or deleting the Tiendanube products themselves — name, price, stock, variants, images, categories — e.g. a catalog migration (`modules/catalog.md`; writes go live immediately and deletes are irreversible)
 
 ## When NOT to use
 
-- Creating products in Tiendanube — use the TN API directly. NodeXOps only writes the description.
-- Touching stock, prices, variants, shipping. Out of scope.
+- Shipping settings, per-location stock, or editing a single variant — not exposed; use the TN admin or the TN API directly.
+- Writing a product's `description` through the catalog endpoints — use NodexGen (`client.products`) so the PDP stays editable in NodeXOps.
 - Designing layouts manually — that's the panel UI's job.
 
 ## Setup (1-time per consumer project)
@@ -43,7 +44,7 @@ client = NodexClient(
 - **Block catalog** (autogen, all available block types): `shared/blocks-catalog.md`
 - **Full API reference** (autogen, all endpoints): `reference/api-reference.md`
 - **NodexGen module** (product PDPs): `modules/nodexgen.md`
-- **Catalog module** (TN passthrough — find products by category): `modules/catalog.md`
+- **Catalog module** (TN passthrough — find, create, edit and delete products): `modules/catalog.md`
 - **Block Groups** (cross-module reusable templates): `modules/block-groups.md`
 - **NodexPage module** (content pages): `modules/nodexpage.md` 🚧 Phase 2
 - **Blog module**: `modules/nodexblog.md` 🚧 Phase 3
@@ -61,6 +62,7 @@ client = NodexClient(
 | Module | Public API | Skill content |
 |---|---|---|
 | NodexGen (product PDPs) | ✅ Live | ✅ Complete |
+| Catalog (TN products, read + write) | ✅ Live | ✅ Complete |
 | NodexPage (content pages) | 🚧 Building | Stub |
 | Blog (posts) | 🚧 Building | Stub |
 

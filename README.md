@@ -43,10 +43,11 @@ That's it. From any project, you can ask Claude to use the skill and it will loa
 |------------------|--------------|----------------------------------------------------|
 | **NodexGen**     | ✅ Live      | Product PDPs (descriptions, draft/publish, blocks) |
 | **Block Groups** | ✅ Live      | Reusable templates applied across many products    |
+| **Catalog**      | ✅ Live      | Tiendanube products: find, create, edit, delete (name, price, stock, variants…) |
 | **NodexPage**    | 🚧 Building  | Content pages (about, FAQ, landing)                |
 | **NodexBlog**    | 🚧 Building  | Blog posts                                         |
 
-It does **not** create products, change stock, prices, variants, or shipping — those stay in the Tiendanube admin or the TN API.
+Catalog writes (create/edit/delete a product, its price and stock) go straight to the live store with no undo, and need a key with the `products:write` scope — read `modules/catalog.md` first. Shipping and per-variant/per-location stock stay in the Tiendanube admin or the TN API.
 
 ## How it works
 

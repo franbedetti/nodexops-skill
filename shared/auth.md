@@ -18,12 +18,27 @@ Each API key has a list of scopes. You receive a 403 if the key is missing the r
 | `nodexgen:write` | Create/update product descriptions (and bulk) |
 | `block-groups:read` | List and read block-groups |
 | `block-groups:write` | Create/update/delete block-groups |
+| `products:read` | Catalog discovery: list/read Tiendanube products, categories, store info |
+| `products:write` | Catalog writes: create/update/delete Tiendanube products (price, stock and variants included — goes live immediately) |
 | `nodexpage:read` | (Phase 2) Read content pages |
 | `nodexpage:write` | (Phase 2) Create/update content pages |
 | `nodexblog:read` | (Phase 3) Read blog posts |
 | `nodexblog:write` | (Phase 3) Create/update blog posts |
 
-Default scopes on a freshly-issued key cover NodexGen + block-groups for the typical "product migration" use case.
+Default scopes on a freshly-issued key: `nodexgen:read`, `nodexgen:write`, `block-groups:read`, `block-groups:write`, `products:read`, `products:write` — the typical "product migration" use case. **The default includes catalog writes.**
+
+### Read-only keys
+
+If your integration only needs to read (or only writes descriptions), don't carry `products:write` around. Ask the NodeXOps admin for a key with only the scopes you need, or mint one yourself from the key you already have — a key can create another key for its own store with a **subset** of its scopes (and a rate limit no higher than its own):
+
+```bash
+curl -X POST https://v2.nodexops.com/api/v2/api-keys/ \
+  -H "Authorization: Bearer $NODEXOPS_API_KEY" -H "Content-Type: application/json" \
+  -d '{"store_id": 12345, "name": "read-only reporting",
+       "scopes": ["nodexgen:read", "block-groups:read", "products:read"]}'
+```
+
+The response carries the new key in `raw_key` (shown only once). Revoke a key with `DELETE /api/v2/api-keys/{key_id}`.
 
 ## Per-store enforcement
 
@@ -41,7 +56,7 @@ Each API key is bound to **exactly one store**. URL paths embed the `store_id`. 
 | 500 | Internal error (retry with backoff) |
 | 502 | Tiendanube failed or did not respond (retry with backoff) |
 
-Error messages are intentionally generic. Detailed reasons go to the server-side audit log only.
+Error messages are intentionally generic, except Tiendanube's own rejection reason on catalog endpoints (the 422 above) — see `modules/catalog.md` → Errors.
 
 ## Rate limiting
 
@@ -51,4 +66,4 @@ Error messages are intentionally generic. Detailed reasons go to the server-side
 
 ## Audit
 
-Every `/api/v2/*` request is logged with: API key id, store, HTTP method + path, status code, IP, user-agent, timestamp. Visible to admins via `GET /api/v2/admin/api-keys/{key_id}/usage`.
+Every `/api/v2/*` request is logged with: API key id, store, HTTP method + path, status code, IP, user-agent, timestamp — and, when Tiendanube failed a catalog call, its reason (status, category and, for a 422, TN's message; never request bodies or tokens). The log is server-side: ask the NodeXOps admin to trace a request (give them the time, method and path).

@@ -14,6 +14,7 @@ Usage:
 
     client.products.get(product_id=999)
     client.products.upload(product_id=999, blocks=[...], as_draft=False)
+    client.catalog.update_product(999, {"published": False})  # TN product itself
 """
 
 from __future__ import annotations
@@ -47,7 +48,14 @@ class _Session:
             "User-Agent": "nodex-client/0.1",
         })
 
-    def request(self, method: str, path: str, **kwargs) -> dict:
+    def request(self, method: str, path: str, retry_5xx: bool = True, **kwargs) -> dict:
+        """Send a request; retry 429 (always) and 5xx (only if ``retry_5xx``).
+
+        A 429 means the request was NOT processed, so retrying it is always safe.
+        A 5xx/timeout on a non-idempotent write (e.g. creating a Tiendanube product)
+        may have been applied anyway — those callers pass ``retry_5xx=False`` so the
+        error surfaces instead of risking a duplicate.
+        """
         url = f"{self.base_url}{path}"
         for attempt in range(self.max_retries):
             response = self._session.request(method, url, timeout=30, **kwargs)
@@ -55,7 +63,7 @@ class _Session:
                 wait = int(response.headers.get("Retry-After", "1"))
                 time.sleep(max(wait, 1))
                 continue
-            if response.status_code >= 500 and attempt < self.max_retries - 1:
+            if response.status_code >= 500 and retry_5xx and attempt < self.max_retries - 1:
                 time.sleep(2 ** attempt)
                 continue
             if not response.ok:
@@ -318,11 +326,16 @@ class _TagsAPI:
 
 
 class _CatalogAPI:
-    """Tiendanube passthrough — list TN products, categories, store info.
+    """Tiendanube passthrough — TN products (read AND write), categories, store info.
 
     Distinct from ``client.products`` which targets NodexGen descriptions.
-    Use ``client.catalog`` to discover which products to edit; use
-    ``client.products`` to read/write their descriptions.
+    Use ``client.catalog`` to discover products and to create/edit/delete the
+    Tiendanube product itself (name, price, stock, variants...); use
+    ``client.products`` to read/write their block-based descriptions.
+
+    Writes need the ``products:write`` scope and go straight to the live store:
+    there is no draft, no undo and no NodeXOps-side validation of the payload.
+    See ``modules/catalog.md`` before using them.
     """
 
     def __init__(self, session: _Session):
@@ -370,6 +383,38 @@ class _CatalogAPI:
         """Get a single product from Tiendanube (full payload including variants)."""
         path = f"/api/v2/stores/{self._s.store_id}/products/{product_id}"
         return self._s.request("GET", path)
+
+    def create_product(self, data: dict) -> dict:
+        """Create a product in Tiendanube. Returns TN's full product payload (with ``id``).
+
+        ``data`` is sent as-is to TN's ``POST /products`` (passthrough); ``name``
+        is required (``{"es": "..."}``). See ``modules/catalog.md`` for the fields.
+
+        NOT idempotent: this method does not auto-retry on 5xx, because a 502 may
+        mean TN created the product and the answer got lost. Check with
+        ``products(q=...)`` before retrying a failed create.
+        """
+        path = f"/api/v2/stores/{self._s.store_id}/products"
+        return self._s.request("POST", path, retry_5xx=False, json=data)
+
+    def update_product(self, product_id: int, data: dict) -> dict:
+        """Update a Tiendanube product (partial: only the fields you send change).
+
+        ``data`` goes as-is to TN's ``PUT /products/{id}``. Returns the updated
+        product. Changing ``name`` regenerates the ``handle`` (public URL) unless
+        you send ``handle`` too — see ``modules/catalog.md``.
+        """
+        path = f"/api/v2/stores/{self._s.store_id}/products/{product_id}"
+        return self._s.request("PUT", path, json=data)
+
+    def delete_product(self, product_id: int) -> dict:
+        """Delete a Tiendanube product. IRREVERSIBLE — TN has no trash/restore.
+
+        Returns ``{"ok": True}``. Does not auto-retry on 5xx: after a 502, check
+        with ``product(product_id)`` (a 404 there means it is already gone).
+        """
+        path = f"/api/v2/stores/{self._s.store_id}/products/{product_id}"
+        return self._s.request("DELETE", path, retry_5xx=False)
 
     def categories(self) -> list[dict]:
         """Flat list of all categories: ``[{id, name, parent_id, permalink}, ...]``."""
